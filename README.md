@@ -22,6 +22,7 @@ The Java FITS writer from STScI neglects to add the 'BITPIX' keyword to the head
 
 ### Image combining
 For each set of observations, there are 6 types of images each with the same split positions:
+
 | Name | Description |
 | ------- | ----- |
 | Source | targets |
