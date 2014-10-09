@@ -36,7 +36,7 @@ Each set must be combined individually. Refer to the observation log to find the
 
 ```python IRMOS_combine.py \path\to\files\ basename num_start num_end outfile```
 
-E.g. If the flat darks are files ['\raw\NGC253_7.fit',\raw\NGC253_8.fit',\raw\NGC253_9.fit'], the command would read:
+E.g. If the flat darks are files [```'\raw\NGC253_7.fit'```, ```'\raw\NGC253_8.fit'```, ```'\raw\NGC253_9.fit'```], the command would read:
 
 ```python IRMOS_combine.py \raw NGC253_ 7 9 FlatDark.fit```
 
