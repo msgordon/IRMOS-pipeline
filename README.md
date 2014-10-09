@@ -32,4 +32,22 @@ For each set of observations, there are 6 types of images each with the same spl
 | Neon | cal lamps |
 | Neon Dark | cal lamp darks |
 
-Each set must be combined individually.
+Each set must be combined individually. Refer to the observation log to find the file numbers of each set and feed those into ```IRMOS_combine.py```.
+
+```python IRMOS_combine.py \path\to\files\ basename num_start num_end outfile```
+
+E.g. If the flat darks are files ['\raw\NGC253_7.fit',\raw\NGC253_8.fit',\raw\NGC253_9.fit'], the command would read:
+
+```python IRMOS_combine.py \raw NGC253_ 7 9 FlatDark.fit```
+
+### Image arithmetic
+The appropriate darks must be subtracted from the appropriate data set.  For each image type (source, flat, neon), use ```IRMOS_imarith.py``` to perform the subtraction.
+
+```python IRMOS_imarith.py file1 file2 output -method sub```
+
+### Cosmic clean
+Like most CCDs, the IRMOS camera suffers from hot and dead pixels.  Using an implementation of Pieter Van Dokkum's [LA Cosmic](http://www.astro.yale.edu/dokkum/lacosmic/) routine, ```IRMOS_clean.py``` cleans input images of cosmic rays and hot/dead pixels all at once.
+
+```python IRMOS_clean.py \path\to\files\*.fit [-o outdir]
+
+
