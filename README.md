@@ -48,6 +48,6 @@ The appropriate darks must be subtracted from the appropriate data set.  For eac
 ### Cosmic clean
 Like most CCDs, the IRMOS camera suffers from hot and dead pixels.  Using an implementation of Pieter Van Dokkum's [LA Cosmic](http://www.astro.yale.edu/dokkum/lacosmic/) routine, ```IRMOS_clean.py``` cleans input images of cosmic rays and hot/dead pixels all at once.
 
-```python IRMOS_clean.py \path\to\files\*.fit [-o outdir]
+```python IRMOS_clean.py \path\to\files\*.fit [-o outdir]```
 
 
