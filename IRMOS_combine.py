@@ -2,7 +2,6 @@
 import argparse
 from IRMOS_reader import DataCube
 import pyfits
-from pyds9 import pydisplay
 
 
 def main():
