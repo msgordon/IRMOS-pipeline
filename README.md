@@ -59,14 +59,20 @@ Derotation is performed as follows:
 
 ```python IRMOS_derotate.py \path\to\files\*.fit [-o outdir]```
 
-### Aperture Extraction
+### Aperture extraction
 Aperture regions need to be defined for each spectrum. Ideally, we would perform automated aperture extraction on the flat image, since these spectra are usually the brightest with well-defined edges.
 
 **NOTE:** At the time of this writing, we never fully completed the contouring and edge-detection algorithm to locate the apertures automatically.  DS9 regions can be made manually, but the pipeline expects a very specific format. An example region file has been included. Essentially, adjacent lines are read as top and bottom pixels of each aperture cut.
 
 Open one of the source images and load the provided ```.reg``` file to check if the aperture regions are appropriate. The lines can be shifted and the region file re-saved without altering the IRMOS-expected region syntax.
 
-### Flat Fielding
-Each aperture must be flat-fielded separately. This is performed by extracting each aperture from the region file, median-squishing each aperture into a single row, Gaussian-smoothing that row, and then dividing the entire aperture by that smoothed row.  The resulting image is normalized around 1.0, where non-aperture regions are exactly 1.0 for convenient division later.  The method is run as:
+### Flat fielding
+Each aperture must be flat-fielded separately. This is performed by extracting each aperture from the region file, median-squishing each aperture into a single row, Gaussian-smoothing that row, and then dividing the entire aperture by that smoothed row.  The resulting image is normalized around 1.0, where non-aperture regions are exactly 1.0 for convenient division later.
 
-```python IRMOS_flatfield.py flat.fit region.reg outfile.fit```
+To build the flat-field, perform the following:
+
+```python IRMOS_flatfield.py flat.fit region.reg FLATFIELD.fit```
+
+Then, divide the dark-subtracted source image by the flatfield:
+
+```python IRMOS_imarith.py SOURCE.fit FLATFIELD.fit -method div```
