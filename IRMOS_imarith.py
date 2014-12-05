@@ -1,13 +1,14 @@
 #! /usr/bin/env python
 import argparse
 import pyfits
+import numpy as np
 
 def main():
     parser = argparse.ArgumentParser(description='Performs image arithmetic on input files')
     parser.add_argument('op1',type=str,help='Image file, operand 1')
     parser.add_argument('op2',type=str,help='Image file, operand 2')
     parser.add_argument('out',type=str,help='Output file')
-    parser.add_argument('-method',choices=('add','sub','mult','div'),default='sub',help='Operation (default="sub")')
+    parser.add_argument('-method',choices=('add','sub','mult','div','mean','median'),default='sub',help='Operation (default="sub")')
 
     
     args = parser.parse_args()
@@ -29,6 +30,12 @@ def main():
     elif args.method == 'div':
         print 'Dividing input images'
         data = op1[0].data / op2[0].data
+    elif args.method == 'mean':
+        print 'Mean-combining input images'
+        data = np.mean([op1[0].data, op2[0].data],axis=0)
+    elif args.method == 'median':
+        print 'Median-combining input images'
+        data = np.median([op1[0].data, op2[0].data],axis=0)
 
     header['OP1'] = (args.op1,'Operand1')
     header['OPER'] = (args.method,'Operation performed')
