@@ -52,7 +52,7 @@ Like most CCDs, the IRMOS camera suffers from hot and dead pixels.  Using an imp
 
 ### Image derotation
 The CCD and the grating mirror are actually at an angle inside IRMOS, which forces the spectra from each slit to fall on the camera at an angle. Therefore, to extract the spectra, the image plane must first be derotated so the dispersion is horizontal.
-####NOTE: At the time of this writing, we assume all slit positions are vertical, so the resulting spectra spill roughly horizontal across the image plane. The correction angle has been hardcoded to 1.15 degrees.
+**NOTE:** At the time of this writing, we assume all slit positions are vertical, so the resulting spectra spill roughly horizontal across the image plane. The correction angle has been hardcoded to 1.15 degrees.
 Derotation is performed as follows:
 
 ```python IRMOS_derotate.py \path\to\files\*.fit [-o outdir]```
