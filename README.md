@@ -40,6 +40,11 @@ E.g. If the flat darks are files [```'\raw\NGC253_7.fit'```, ```'\raw\NGC253_8.f
 
 ```python IRMOS_combine.py \raw NGC253_ 7 9 FlatDark.fit```
 
+### Image normalization
+Each file run through ```IRMOS_combine.py``` will be normalized by exposure time.  For anything else, the normalization should be performed using:
+
+```python IRMOS_expnorm.py```
+
 ### Image arithmetic
 The appropriate darks must be subtracted from the appropriate data set.  For each image type (source, flat, neon), use ```IRMOS_imarith.py``` to perform the subtraction.
 
