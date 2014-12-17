@@ -4,12 +4,14 @@ import pyfits
 import numpy as np
 import os.path
 
-def is_normalized(data, header, key, normkey):
+def is_normalized(header, normkey):
     '''
     Return true if keyword 'normkey' is true in header
     '''
-
-    return 
+    if header[normkey]:
+        return True
+    else:
+        return False
 
     
 def normalize(data, header, key, normkey):
@@ -17,7 +19,10 @@ def normalize(data, header, key, normkey):
     Divide image by exposure time keyword "key"
     Update keyword "normkey" to True
     '''
-
+    exptime = np.float(header[key])/1000.
+    data /= exptime
+    header[normkey] = (True, 'Data is normalized')
+    
     return data, header
     
 
@@ -36,7 +41,7 @@ def main():
         data,header = pyfits.getdata(filename, header=True)
 
         # If already normalized, skip this file
-        if is_normalized(data, header, args.key, args.normkey):
+        if is_normalized(header, args.normkey):
             print 'Skipping %s.  Already normalized.' % filename
             continue
 

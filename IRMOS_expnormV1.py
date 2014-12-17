@@ -5,10 +5,10 @@ import numpy as np
 import os.path
 
 def is_normalized(data, header, key, normkey):
-    if normkey in header:
+    if normkey in header:  # in general, don't leave a pass statement
         pass
     else:
-        header[normkey]=False
+        header[normkey]=False  # No need to assign it to False
     if header[normkey]==True:
         return True
     else:
@@ -19,8 +19,8 @@ def is_normalized(data, header, key, normkey):
 
     
 def normalize(data, header, key, normkey):
-    expsec=int(header[key])/1000
-    for i,j in enumerate(data):
+    expsec=int(header[key])/1000  #cast to float instead--exptimes not necessarily integers
+    for i,j in enumerate(data):  #the beauty of numpy arrays is that you can divide the entire thing by a single value  e.g.  data = data / expsec
         data[i]=j/expsec
     header[normkey]=True
     '''
