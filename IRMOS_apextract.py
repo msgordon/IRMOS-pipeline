@@ -34,8 +34,10 @@ def main():
     header=pyfits.getheader(args.ffimg)
     new_head=head_append(header)
     
+    aps1D_flip=aps1D[::-1] #reverses the order back to normal
+    
     print 'Writing spectral cuts to NGC253.ms.fits'
-    pyfits.writeto('NGC253.ms.fits', aps1D, new_head)
+    pyfits.writeto('NGC253.ms.fits', aps1D_flip, new_head)
 
 
 if __name__ == '__main__':
