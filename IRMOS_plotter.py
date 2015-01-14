@@ -31,10 +31,17 @@ def get_featurelist(lines):
     pairs = [(int(x[0]),float(x[1])) for x in pairs]
     return pairs
 
+def find_peak(data,cm,search,lenx):
+        localmax,localmin = peakdetect(data[cm-search:cm+search],x_axis=range(0,lenx)[cm-search:cm+search],lookahead=search/4)
+        localmax = sorted(localmax,key=lambda x:x[1])[-1]
 
-class Plotter(object):
-    def __init__(self, filename, aperture, linelist=None,load=False):
+        return localmax
 
+
+
+
+class Aperture(object):
+    def __init__(self,filename,data,aperture,linelist=None,load=False):
         self.filename = filename
         self.linelist = linelist
         self.aperture = aperture
@@ -44,7 +51,7 @@ class Plotter(object):
         self.database = os.path.join(self.databasedir,os.path.splitext(os.path.basename(filename))[0]+'.cal')
         self.section = os.path.basename(self.filename)
         self.section = '%s_%i' % (os.path.splitext(self.section)[0],self.aperture)
-        self.orig = pyfits.getdata(filename)[aperture]
+        self.orig = data[aperture]
         self.active_data = self.orig
         self.x = range(0,len(self.active_data))
         self.ix = range(0,len(self.active_data))
@@ -58,7 +65,108 @@ class Plotter(object):
             #load from database
             self._load_lines()
             self.fit()
+
+    def _load_lines(self):
+        #read lines from database
+        if not os.path.exists(self.database):
+            print 'No database file found for %s' % self.filename
+            return
+
+        config = ConfigParser.SafeConfigParser()
+        print 'Loading calibration from %s' % self.database
+        config.read(self.database)
+        if not config.has_section(self.section):
+            print 'Aperture %i not found in %s' % self.database
+            return
             
+
+        if not config.has_option(self.section,'lines'):
+            print 'Aperture %i calibration not found in %s' % self.database
+            return
+
+        featurelist = get_featurelist(config.get(self.section,'lines'))
+        print 'Loaded %i features for aperture %i' % (len(featurelist),self.aperture)
+        ys = [find_peak(self.active_data,x[0],self.search,len(self.x))[1] for x in featurelist]
+        self.lines = [[x[0],y,x[1],None] for x,y in zip(featurelist,ys)]
+        return self.lines
+
+
+    def _save_lines(self,m,b,rms,lines):
+        #mkdir
+        try:
+            os.mkdir(self.databasedir)
+        except OSError:
+            print 'Directory %s exists.' % self.databasedir
+
+        section = self.section
+
+        config = ConfigParser.SafeConfigParser()
+        if os.path.exists(self.database):
+            config.read(self.database)
+
+        try:
+            config.add_section(section)
+        except ConfigParser.DuplicateSectionError:
+            print 'Overwriting previous calibration'
+
+        featurelist = set_featurelist(lines)
+        config.set(section,'CRDELT1','%.3f'%np.abs(m))
+        config.set(section,'CRPIX1','1')
+        config.set(section,'CRVAL1','%.3f'%b)
+        config.set(section,'RMS','%.3f'%rms)
+        config.set(section,'lines',featurelist)
+
+        with open(self.database,'w') as configfile:
+            print 'Writing aperture %i to %s' % (self.aperture, self.database)
+            config.write(configfile)
+
+        return 0
+
+    def fit(self):
+        pix = [x[0] for x in self.lines]
+        waves = [x[2] for x in self.lines]
+        
+        if len(waves) < 3:
+            print 'At least 3 points required for fitting'
+            return
+
+        pairs = zip(pix,waves)
+        pairs = sorted(pairs,key = lambda x:x[0])
+        #if sorted(waves) != waves:
+        #    print 'WARNING: No monotonic solution.  Cannot fit'
+        #    return
+
+        p = np.polyfit(pix,waves,1,full=True)
+        z = np.poly1d(p[0])
+        m = p[0][0]
+        # if slope is negative, plot is flipped
+        if m < 0:
+            b = z(np.max(self.ix))
+        else:
+            b = z(np.min(self.ix))
+        rms = np.sqrt(p[1]/len(pix))
+        print 'Slope: %.3f, Ref: %.3f, RMS: %.3f' % (np.abs(m),b,rms)
+        self.x = z(self.ix)
+        #self.display(self.x,self.active_data,reset=True)
+        return (m,b,rms)
+
+            
+    
+
+class Plotter(object):
+    def __init__(self, filename, aperture, linelist=None,load=False):
+        self.filename = filename
+        self.linelist = linelist
+        
+        self.data = pyfits.getdata(filename)
+
+        # hold all apertures
+        self.aps = [None]*len(self.data)
+        
+        self.ap = Aperture(filename,self.data,aperture,linelist,load)
+
+        self.aps[aperture] = self.ap
+        
 
     def _setup_linelist(self,linelist):
         if isinstance(linelist,str):
@@ -104,34 +212,23 @@ class Plotter(object):
         self.pid = None
 
         # Plot initial data
-        self.display(self.x,self.active_data,lines=self.lines,reset=True)
+        self.display(self.ap.x,self.ap.active_data,lines=self.ap.lines,reset=True)
 
         plt.show()
         return self.fig
 
-    def _load_lines(self):
-        #read lines from database
-        if not os.path.exists(self.database):
-            print 'No database file found for %s' % self.filename
-            return
+    def _swap_aperture(self,cap):
+        #if aperture already exists, get it
+        if self.aps[cap]:
+            self.ap = self.aps[cap]
+        # load new aperture
+        else:
+            self.ap = Aperture(self.filename,self.data,cap,self.linelist)
+            self.aps[cap] = self.ap
 
-        config = ConfigParser.SafeConfigParser()
-        print 'Loading calibration from %s' % self.database
-        config.read(self.database)
-        if not config.has_section(self.section):
-            print 'Aperture %i not found in %s' % self.database
-            return
-
-        if not config.has_option(self.section,'lines'):
-            print 'Aperture %i calibration not found in %s' % self.database
-            return
-
-        featurelist = get_featurelist(config.get(self.section,'lines'))
-        print 'Loaded %i features' % len(featurelist)
-        ys = [self.find_peak(x[0])[1] for x in featurelist]
-        self.lines = [[x[0],y,x[1],None] for x,y in zip(featurelist,ys)]
-        return self.lines
-
+        # Plot initial data
+        self.display(self.ap.x,self.ap.active_data,lines=self.ap.lines,reset=True)
+        return self.ap
 
 
     def displaylines(self,lines=None,color='r'):
@@ -139,30 +236,27 @@ class Plotter(object):
         texth = arrh*2
         #print self.lines
         if not lines:
-            lines = self.lines
+            lines = self.ap.lines
 
         pids = []
         for line in lines:
             ix,y,s,pid = line  #index of x, y data, string, pid
             line[3] = plt.annotate(s,
-                                   xytext=(self.x[ix],y+texth),
-                                   xy=(self.x[ix],y+arrh),
+                                   xytext=(self.ap.x[ix],y+texth),
+                                   xy=(self.ap.x[ix],y+arrh),
                                    rotation=90,va='bottom',ha='center',
                                    arrowprops=dict(arrowstyle="-",color=color),
                                    fontsize=10)
             pids.append(line[3])
         return pids
 
-    def display(self,x, data,lines=None,flip=False,reset=False):
+    def display(self, x, data,lines=None,flip=False,reset=False):
         if plt.gca():
             xlim = plt.gca().get_xlim()
             ylim = plt.gca().get_ylim()
 
         self.fig.clf()
         
-        if isinstance(data,str):
-            data = pyfits.getdata(data)
-
         plt.plot(x,data,lw=1.5,color='k')
 
         if not reset:
@@ -173,6 +267,7 @@ class Plotter(object):
             plt.xlim(plt.gca().get_xlim()[::-1])
 
         self.displaylines(lines)
+        self.fig.suptitle('%s[%i]' % (self.ap.filename,self.ap.aperture))
         self.fig.canvas.draw()
 
 
@@ -202,41 +297,15 @@ class Plotter(object):
             return
 
         if args.s:
-            fitted = self.fit()
+            fitted = self.ap.fit()
             if fitted:
                 m,b,rms = fitted
-                self.display(self.x,self.active_data,reset=True)
+                self.display(self.ap.x,self.ap.active_data,reset=True)
             else:
                 print 'No fit.'
                 return
             
-            #mkdir
-            try:
-                os.mkdir(self.databasedir)
-            except OSError:
-                print 'Directory %s exists.' % self.databasedir
-
-            section = self.section
-
-            config = ConfigParser.SafeConfigParser()
-            if os.path.exists(self.database):
-                config.read(self.database)
-                           
-            try:
-                config.add_section(section)
-            except ConfigParser.DuplicateSectionError:
-                print 'Overwriting previous calibration'
-                
-            featurelist = set_featurelist(self.lines)
-            config.set(section,'CRDELT1','%.3f'%np.abs(m))
-            config.set(section,'CRPIX1','1')
-            config.set(section,'CRVAL1','%.3f'%b)
-            config.set(section,'RMS','%.3f'%rms)
-            config.set(section,'lines',featurelist)
-
-            with open(self.database,'w') as configfile:
-                print 'Writing aperture %i to %s' % (self.aperture, self.database)
-                config.write(configfile)
+            self._save_lines(m,b,rms,self.ap.lines)
             
             if args.q:
                 plt.close()
@@ -245,22 +314,22 @@ class Plotter(object):
                 return
 
         if args.l:
-            self._load_lines()
-            self.fit()
-            self.display(self.x,self.active_data,reset=True)
+            self.ap._load_lines()
+            self.ap.fit()
+            self.display(self.ap.x,self.ap.active_data,reset=True)
             return
 
         if args.w == 'f':
-            self.display(self.x,self.active_data,flip=True)
+            self.display(self.ap.x,self.ap.active_data,flip=True)
 
         elif args.w == 'a':
-            self.display(self.x,self.active_data,reset=True)
+            self.display(self.ap.x,self.ap.active_data,reset=True)
 
         if args.r:
-            self.active_data = self.orig
-            self.x = range(0,len(self.active_data))
-            self.ix = range(0,len(self.active_data))
-            self.display(self.x,self.active_data,reset=True)
+            self.ap.active_data = self.ap.orig
+            self.ap.x = range(0,len(self.ap.active_data))
+            self.ap.ix = range(0,len(self.ap.active_data))
+            self.display(self.ap.x,self.ap.active_data,reset=True)
 
         if args.q:
             plt.close()
@@ -282,7 +351,7 @@ class Plotter(object):
                     if parsed == 'Q':
                         return
                     self.pausetext = '-'
-                    self.display(self.x,self.active_data)
+                    self.display(self.ap.x,self.ap.active_data)
                     return
                 else:
                     #label mode
@@ -309,11 +378,11 @@ class Plotter(object):
                         #else:
                         s = self.linelist[indx]
                         ix = self.cm
-                        y = self.active_data[ix]
-                        self.lines.append([ix,y,s,None])
+                        y = self.ap.active_data[ix]
+                        self.ap.lines.append([ix,y,s,None])
 
                     self.pausetext = '-'
-                    self.display(self.x,self.active_data)
+                    self.display(self.ap.x,self.ap.active_data)
                     self.labelmode = False
                     return
 
@@ -367,7 +436,7 @@ class Plotter(object):
             if cm is None:
                 return
 
-            localmax = self.find_peak(cm)
+            localmax = find_peak(self.ap.active_data,cm,self.ap.search,len(self.ap.x))
 
             self.fig.canvas.mpl_disconnect(self.keycid)
             self.pausetext = '[%i]: ' % localmax[0]
@@ -382,7 +451,7 @@ class Plotter(object):
 
         #delete line nearby
         if event.key =='d':
-            if not self.lines:
+            if not self.ap.lines:
                 return
             
             # grab mouse position
@@ -394,22 +463,45 @@ class Plotter(object):
             #print self.lines
             #print cm
 
-            linexs = np.array([line[0] for line in self.lines])
+            linexs = np.array([line[0] for line in self.ap.lines])
             #print linexs,cm
             cidx = np.argmin(np.abs(linexs - cm))
             #idx = np.searchsorted(linexs,cm)
             #print idx
-            self.lines[cidx][3].remove()
-            del self.lines[cidx]
+            self.ap.lines[cidx][3].remove()
+            del self.ap.lines[cidx]
             self.fig.canvas.draw()
             return
 
+        # fit
         if event.key == 'f':
-            self.fit()
-            self.display(self.x,self.active_data,reset=True)
+            self.ap.fit()
+            self.display(self.ap.x,self.ap.active_data,reset=True)
             
             return
-            
+
+        # if left, get next
+        if event.key in ['9','(']:
+            cap = self.ap.aperture
+            if cap <= 0:
+                #at first, so don't get previous
+                return
+
+            cap = cap - 1
+            self._swap_aperture(cap)
+            return
+
+        # if right, get next
+        if event.key in ['0',')']:
+            cap = self.ap.aperture
+            if cap >= (len(self.data)-1):
+                #at end, so don't get next
+                return
+
+            cap = cap + 1
+            self._swap_aperture(cap)
+            return
+
 
     def mouse_move(self, event):
         if not event.inaxes:
@@ -419,15 +511,15 @@ class Plotter(object):
             return
 
         x, y = event.xdata, event.ydata
-        sortx = np.sort(self.x)
+        sortx = np.sort(self.ap.x)
         indx = np.searchsorted(sortx, [x])[0]
 
         # if self.x was reversed, switch index
-        if self.x[0] > self.x[-1]:
-            indx = len(self.x) - indx
+        if self.ap.x[0] > self.ap.x[-1]:
+            indx = len(self.ap.x) - indx
         
         
-        if (indx >= len(self.x)) or (indx == -1):
+        if (indx >= len(self.ap.x)) or (indx == -1):
             #self.cx = None
             #self.cy = None
             self.ci = None
@@ -438,44 +530,3 @@ class Plotter(object):
         #self.cy = self.active_data[indx]
         return
 
-
-    def find_peak(self,cm):
-        localmax,localmin = peakdetect(self.active_data[cm-self.search:cm+self.search],x_axis=range(0,len(self.x))[cm-self.search:cm+self.search],lookahead=self.search/4)
-        localmax = sorted(localmax,key=lambda x:x[1])[-1]
-
-        return localmax
-
-    def fit(self):
-        pix = [x[0] for x in self.lines]
-        waves = [x[2] for x in self.lines]
-        
-        if len(waves) < 3:
-            print 'At least 3 points required for fitting'
-            return
-
-        pairs = zip(pix,waves)
-        pairs = sorted(pairs,key = lambda x:x[0])
-        #if sorted(waves) != waves:
-        #    print 'WARNING: No monotonic solution.  Cannot fit'
-        #    return
-
-        p = np.polyfit(pix,waves,1,full=True)
-        z = np.poly1d(p[0])
-        m = p[0][0]
-        # if slope is negative, plot is flipped
-        if m < 0:
-            b = z(np.max(self.ix))
-        else:
-            b = z(np.min(self.ix))
-        rms = np.sqrt(p[1]/len(pix))
-        print 'Slope: %.3f, Ref: %.3f, RMS: %.3f' % (np.abs(m),b,rms)
-        self.x = z(self.ix)
-        #self.display(self.x,self.active_data,reset=True)
-        return (m,b,rms)
-
-        #plt.figure()
-        #plt.plot(pix,waves,'ro')
-        #plt.plot(pix,np.poly1d(p[0])(pix),'b-')
-        #plt.show()
-
-        
