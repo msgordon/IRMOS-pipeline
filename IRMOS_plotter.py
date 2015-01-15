@@ -5,6 +5,7 @@ import matplotlib.patheffects as PE
 import numpy as np
 import pyfits
 from peakdetect import peakdetect
+from scipy.signal import correlate
 import os
 import ConfigParser
 
@@ -32,10 +33,18 @@ def get_featurelist(lines):
     return pairs
 
 def find_peak(data,cm,search,lenx):
-        localmax,localmin = peakdetect(data[cm-search:cm+search],x_axis=range(0,lenx)[cm-search:cm+search],lookahead=search/4)
-        localmax = sorted(localmax,key=lambda x:x[1])[-1]
+    localmax,localmin = peakdetect(data[cm-search:cm+search],x_axis=range(0,lenx)[cm-search:cm+search],lookahead=search/4)
+    localmax = sorted(localmax,key=lambda x:x[1])[-1]
 
-        return localmax
+    return localmax
+
+def find_shift(ref,data):
+    refm = np.ma.array(ref,mask=np.isnan(ref),fill_value=0.)
+    datam= np.ma.array(data,mask=np.isnan(data),fill_value=0.)
+
+    corr = correlate(refm.filled(),datam.filled())
+    # index of maximum correlation is the amount to shift
+    return len(data) - np.argmax(corr)
 
 
 
@@ -60,11 +69,16 @@ class Aperture(object):
         self.search = 10
         self.load = load
         self.lines = []
+
+        # check if done
+        self.fitted = False
         
         if load:
             #load from database
-            self._load_lines()
-            self.fit()
+            loaded = self._load_lines()
+            fitted = self.fit()
+            if loaded and fitted:
+                self.fitted = True
 
     def _load_lines(self):
         #read lines from database
@@ -76,12 +90,12 @@ class Aperture(object):
         print 'Loading calibration from %s' % self.database
         config.read(self.database)
         if not config.has_section(self.section):
-            print 'Aperture %i not found in %s' % self.database
+            print 'Aperture %i not found in %s' % (self.aperture,self.database)
             return
             
 
         if not config.has_option(self.section,'lines'):
-            print 'Aperture %i calibration not found in %s' % self.database
+            print 'Aperture %i calibration not found in %s' % (self.aperture, self.database)
             return
 
         featurelist = get_featurelist(config.get(self.section,'lines'))
@@ -148,7 +162,21 @@ class Aperture(object):
         print 'Slope: %.3f, Ref: %.3f, RMS: %.3f' % (np.abs(m),b,rms)
         self.x = z(self.ix)
         #self.display(self.x,self.active_data,reset=True)
+        self.fitted = True
         return (m,b,rms)
+
+
+    def reidentify(self,reflines,offset):
+        guessx = [x[0]+offset for x in reflines]
+        try:
+            peaks = [find_peak(self.active_data,x,self.search,len(self.x)) for x in guessx]
+            # ix, y, s, pid
+            newlines = [[peak[0],peak[1],ref[2],None] for peak,ref in zip(peaks,reflines)]
+            self.lines = newlines
+        except:
+            return None  #failed to find new peaks
+
+        return self.lines
 
             
     
@@ -166,6 +194,14 @@ class Plotter(object):
         self.ap = Aperture(filename,self.data,aperture,linelist,load)
 
         self.aps[aperture] = self.ap
+
+        # set reference aperture
+        #  if initialized on load, check if actually loaded and set this
+        if self.ap.load and self.ap.lines:
+            self.iref = aperture
+        else:
+            self.iref = None
+        
         
 
     def _setup_linelist(self,linelist):
@@ -201,6 +237,7 @@ class Plotter(object):
         self.subparser.add_argument('-w',choices=['a','f'],help="Window functions. 'a' restores axes. 'f' flips x-axis")
         self.subparser.add_argument('--s',action='store_true',help='Save to database')
         self.subparser.add_argument('--l',action='store_true',help='Load from database')
+        self.subparser.add_argument('--setref',nargs='?',type=int,default=None,const=-1,help='Set this aperture (or specified index) as reference.')
         return
 
     def _initialize_figure(self):
@@ -296,6 +333,7 @@ class Plotter(object):
         if not args:
             return
 
+        # save features to ./database/
         if args.s:
             fitted = self.ap.fit()
             if fitted:
@@ -306,6 +344,11 @@ class Plotter(object):
                 return
             
             self._save_lines(m,b,rms,self.ap.lines)
+
+            #set this to reference if not already set
+            if (self.iref is not None) or (self.iref != 0):
+                self.iref = self.ap.aperture
+                print 'Aperture %i set as reference' % self.iref
             
             if args.q:
                 plt.close()
@@ -313,24 +356,58 @@ class Plotter(object):
             else:
                 return
 
+        # load features from ./database/
         if args.l:
-            self.ap._load_lines()
-            self.ap.fit()
+            lines = self.ap._load_lines()
+            if lines:
+                self.ap.fit()
+
+            #if loaded and fit, set reference if not already set
+            if self.ap.fitted:
+                if (self.iref is not None) or (self.iref != 0):
+                    self.iref = self.ap.aperture
+                    print 'Aperture %i set as reference' % self.iref
+
+            
             self.display(self.ap.x,self.ap.active_data,reset=True)
             return
 
+        # '-wf' flip
         if args.w == 'f':
             self.display(self.ap.x,self.ap.active_data,flip=True)
 
+        # '-wa' restore zoom
         elif args.w == 'a':
             self.display(self.ap.x,self.ap.active_data,reset=True)
 
+        # '--r' restore to default
         if args.r:
             self.ap.active_data = self.ap.orig
             self.ap.x = range(0,len(self.ap.active_data))
             self.ap.ix = range(0,len(self.ap.active_data))
             self.display(self.ap.x,self.ap.active_data,reset=True)
 
+
+        # set reference file
+        if args.setref is not None:
+            if args.setref == -1:
+                #value not specified, so set this aperture if loaded
+                if self.ap.fitted:
+                    self.iref = self.ap.aperture
+                    print 'Aperture %i set as reference' % self.iref
+                else:
+                    print 'Must fit aperture %i before it can be used as reference' % self.ap.aperture
+
+            else:
+                if self.aps[args.setref].fitted:
+                    self.iref = args.setref
+                    print 'Aperture %i set as reference' % self.iref
+                else:
+                    print 'Must fit aperture %i before it can be used as reference' % args.setref
+
+            return
+
+        
         if args.q:
             plt.close()
             return 'Q'
@@ -500,6 +577,22 @@ class Plotter(object):
 
             cap = cap + 1
             self._swap_aperture(cap)
+            return
+
+        if event.key == 'c':
+            if self.iref is None:
+                print 'No reference aperture set'
+
+            else:
+                shift = find_shift(self.aps[self.iref].active_data,self.ap.active_data)
+                print 'Offset %i pixels from reference' % shift
+                lines =self.ap.reidentify(self.aps[self.iref].lines,shift)
+                
+                if lines:
+                    print 'Located %i features from reference' % len(lines)
+                    self.ap.fit()
+                    if self.ap.fitted:
+                        self.display(self.ap.x,self.ap.active_data,reset=True)
             return
 
 
