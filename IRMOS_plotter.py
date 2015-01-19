@@ -235,9 +235,11 @@ class Plotter(object):
         self.subparser.add_argument('--r',action='store_true',help='Restore original')
         self.subparser.add_argument('--q',action='store_true',help='Close Plotter and quit')
         self.subparser.add_argument('-w',choices=['a','f'],help="Window functions. 'a' restores axes. 'f' flips x-axis")
-        self.subparser.add_argument('--s',action='store_true',help='Save to database')
+        self.subparser.add_argument('--s',nargs='?',default=None,const=-1,help='Save to database.  "--s a" saves all')
         self.subparser.add_argument('--l',action='store_true',help='Load from database')
         self.subparser.add_argument('--setref',nargs='?',type=int,default=None,const=-1,help='Set this aperture (or specified index) as reference.')
+        self.subparser.add_argument('--c',nargs='?',default=None,const=-1,help='Calibrate this aperture against reference.  "--c a" calibrates all')
+        
         return
 
     def _initialize_figure(self):
@@ -266,6 +268,15 @@ class Plotter(object):
         # Plot initial data
         self.display(self.ap.x,self.ap.active_data,lines=self.ap.lines,reset=True)
         return self.ap
+
+    def _load_all_apertures(self):
+        for i in range(0,len(self.data)):
+            if self.aps[i]:
+                #don't reload if exists
+                continue
+            else:
+                self.aps[i] = Aperture(self.filename,self.data,i,self.linelist)
+        return self.aps
 
 
     def displaylines(self,lines=None,color='r'):
@@ -334,7 +345,7 @@ class Plotter(object):
             return
 
         # save features to ./database/
-        if args.s:
+        if args.s == -1:
             fitted = self.ap.fit()
             if fitted:
                 m,b,rms = fitted
@@ -343,7 +354,7 @@ class Plotter(object):
                 print 'No fit.'
                 return
             
-            self._save_lines(m,b,rms,self.ap.lines)
+            self.ap._save_lines(m,b,rms,self.ap.lines)
 
             #set this to reference if not already set
             if (self.iref is not None) or (self.iref != 0):
@@ -355,6 +366,38 @@ class Plotter(object):
                 return 'Q'
             else:
                 return
+
+        # save all to database
+        if args.s == 'a':
+            for ap in self.aps:
+                if not ap:
+                    continue
+                if ap.lines:
+                    print 'Aperture %i, %i lines found' % (ap.aperture,len(ap.lines))
+                    fitted = ap.fit()
+                    if fitted:
+                        m,b,rms = fitted
+                        ap._save_lines(m,b,rms,ap.lines)
+                    else:
+                        print '\tno fit.'
+                else:
+                    print 'Aperture %i, no lines found' % ap.aperture
+            
+            self.display(self.ap.x,self.ap.active_data,reset=True)
+
+        if args.c == -1:
+            # calibrate this
+            self.calibrate(self.ap)
+
+        if args.c == 'a':
+            #calibrate all
+            if self.iref is None:
+                print 'No reference aperture set'
+                return
+            # preload all aps
+            self._load_all_apertures()
+            for ap in self.aps:
+                self.calibrate(ap,display=False)
 
         # load features from ./database/
         if args.l:
@@ -580,19 +623,7 @@ class Plotter(object):
             return
 
         if event.key == 'c':
-            if self.iref is None:
-                print 'No reference aperture set'
-
-            else:
-                shift = find_shift(self.aps[self.iref].active_data,self.ap.active_data)
-                print 'Offset %i pixels from reference' % shift
-                lines =self.ap.reidentify(self.aps[self.iref].lines,shift)
-                
-                if lines:
-                    print 'Located %i features from reference' % len(lines)
-                    self.ap.fit()
-                    if self.ap.fitted:
-                        self.display(self.ap.x,self.ap.active_data,reset=True)
+            self.calibrate(self.ap)
             return
 
 
@@ -623,3 +654,19 @@ class Plotter(object):
         #self.cy = self.active_data[indx]
         return
 
+    def calibrate(self,ap,display=True):
+        if self.iref is None:
+            print 'No reference aperture set'
+            return None
+        if ap is None:
+            return
+        shift = find_shift(self.aps[self.iref].active_data,ap.active_data)
+        print 'Offset %i pixels from reference' % shift
+        lines = ap.reidentify(self.aps[self.iref].lines,shift)
+
+        if lines:
+            print 'Located %i features from reference' % len(lines)
+            fitted = ap.fit()
+            if ap.fitted and display:
+                self.display(ap.x,ap.active_data,reset=True)
+        return fitted
