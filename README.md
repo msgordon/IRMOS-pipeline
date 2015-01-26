@@ -14,6 +14,9 @@ Requirements
 ## General notes
 All programs in the pipeline utilize the python built-in ```argparse``` module, which creates a unified help menu at the terminal.  For all programs, type ```python IRMOS_[].py -h``` to see the proper usage.
 
+Clone the repo locally:
+```git clone https://github.com/msgordon/IRMOS-pipeline.git```
+
 ## Reduction steps
 ### BITPIX fix
 The Java FITS writer from STScI neglects to add the 'BITPIX' keyword to the headers, thus rendering the files unreadable.  The following method simply updates the headers of input archive images.
