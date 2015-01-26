@@ -16,6 +16,9 @@ header=pyfits.getheader('NGC253.ms.fits')
 
 
 print "Writing spectra files to NGC253_spectra"
+
+#Why not write a 'for' loop...?
+
 pyfits.writeto('NGC253_spectra/NGC253_spec0.fits', data[0], Header(header,'NGC253.ms_15'))
 pyfits.writeto('NGC253_spectra/NGC253_spec1.fits', data[1], Header(header,'NGC253.ms_14'))
 pyfits.writeto('NGC253_spectra/NGC253_spec2.fits', data[2], Header(header,'NGC253.ms_13'))
