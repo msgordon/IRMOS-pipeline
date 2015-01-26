@@ -64,12 +64,16 @@ Derotation is performed as follows:
 
 ```python IRMOS_derotate.py \path\to\files\*.fit [-o outdir]```
 
+![derotated img](img/derotate.png)
+
 ### Aperture extraction
 Aperture regions need to be defined for each spectrum. Ideally, we would perform automated aperture extraction on the flat image, since these spectra are usually the brightest with well-defined edges.
 
 **NOTE:** At the time of this writing, we never fully completed the contouring and edge-detection algorithm to locate the apertures automatically.  DS9 regions can be made manually, but the pipeline expects a very specific format. An example region file has been included. Essentially, adjacent lines are read as top and bottom pixels of each aperture cut.
 
 Open one of the source images and load the provided ```.reg``` file to check if the aperture regions are appropriate. The lines can be shifted and the region file re-saved without altering the IRMOS-expected region syntax.
+
+![apertures img](img/apextract.png)
 
 ### Flat fielding
 Each aperture must be flat-fielded separately. This is performed by extracting each aperture from the region file, median-squishing each aperture into a single row, Gaussian-smoothing that row, and then dividing the entire aperture by that smoothed row.  The resulting image is normalized around 1.0, where non-aperture regions are exactly 1.0 for convenient division later.
@@ -81,3 +85,14 @@ To build the flat-field, perform the following:
 Then, divide the dark-subtracted source image by the flatfield:
 
 ```python IRMOS_imarith.py SOURCE.fit FLATFIELD.fit -method div```
+
+### Wavelength calibration
+We have had great success using OH sky emission features for wavelength calibration.  We have developed a version of ```IRAF identify``` in ```python``` using ```matplotlib``` for an interactive, point-and-click calibration experience.
+
+Target features are identified in an aperture, a linear fit is applied to reconstruct the wavelength dispersion of the chip (future versions will incorporate Chebyshev or Legendre polynomials for a more advanced fit), and the features are written to a local database.  This database can be used to rapidly 're-identify' the same features in another aperture.
+
+This re-identification is performed by cross-correlating the calibrated spectrum and finding first the overall wavelength shift of the spectrum, and then searching locally around each previously identified spectral lines to find the peaks (future versions will fit a Gaussian/Lorentzian/Voight profile to each feature to find the subpixel maxima).
+
+```python IRMOS_identify.py SOURCE.fit ohlines.dat```
+
+![identify img](img/identify.png)
