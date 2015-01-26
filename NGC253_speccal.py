@@ -18,6 +18,9 @@ header=pyfits.getheader('NGC253.ms.fits')
 print "Writing spectra files to NGC253_spectra"
 
 #Why not write a 'for' loop...?
+for idx,row in enumerate(data):
+    pyfits.writeto('folder/NGC253_spec%i.fits' % idx, row, Header(header,'NGC253.ms_%i' % len(data)-idx))
+    
 
 pyfits.writeto('NGC253_spectra/NGC253_spec0.fits', data[0], Header(header,'NGC253.ms_15'))
 pyfits.writeto('NGC253_spectra/NGC253_spec1.fits', data[1], Header(header,'NGC253.ms_14'))
