@@ -3,11 +3,12 @@ import argparse
 import pyfits
 import ConfigParser
 
-def Header(config,header,section):
+def Header(config,header,section,idx):
     head=header
     head['CDELT1']=config.getfloat(section,'crdelt1')
     head['CRPIX1']=config.getint(section,'crpix1')
     head['CRVAL1']=config.getfloat(section,'crval1')
+    head['APID']=idx
     return head
 
 def main():
@@ -26,7 +27,7 @@ def main():
     print "Writing spectra files to new folder."
     
     for idx,row in enumerate(data):
-        pyfits.writeto('%s_spectra/%s_spec%i.fits' % (args.name, args.name, idx), row, Header(config,header,'%s.ms_%i' % (args.name, len(data)-idx-1)))
+        pyfits.writeto('%s_spectra/%s_spec%i.fits' % (args.name, args.name, idx), row, Header(config,header,'%s.ms_%i' % (args.name, len(data)-idx-1),idx))
 
 if __name__ == '__main__':
     main()
