@@ -27,7 +27,7 @@ def main():
     print "Writing spectra files to new folder."
     
     for idx,row in enumerate(data):
-        pyfits.writeto('%s_spectra/%s_spec%i.fits' % (args.name, args.name, idx), row, Header(config,header,'%s.ms_%i' % (args.name, len(data)-idx-1),idx))
+        pyfits.writeto('%s_spectra/%s_spec%i.fits' % (args.name, args.name, idx), row, Header(config,header,'%s.ms_%i' % (args.name, idx),idx))
 
 if __name__ == '__main__':
     main()
