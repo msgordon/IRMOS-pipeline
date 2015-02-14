@@ -3,7 +3,18 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import pyfits
-import ConfigParser
+from scipy.interpolate import interp1d
+
+def rescale(x,y,minwave,maxwave):
+    # newx same length as original spectrum, but rescaled
+    newx = np.linspace(minwave,maxwave,num = len(x))
+
+    fy = interp1d(x,y, kind='slinear',bounds_error=False)
+
+    #apply interp function to newx
+    newy = fy(newx)
+
+    return (newx,newy)
 
 def main():
     parser = argparse.ArgumentParser(description='Aligns all spectra, combines sky spectra, and writes a fits file for the new sky spectrum and each object spectrum.')
@@ -12,8 +23,6 @@ def main():
     parser.add_argument('objmin',type=int,help='Number of first object aperture.')
     parser.add_argument('objmax',type=int,help='Number of last object aperture.')
     parser.add_argument('specmax',type=int,help='Number of last aperture.')
-    parser.add_argument('wavemin',type=int,help='Wavelength(A) in the empty space before the spectra (for cut-off).')
-    parser.add_argument('wavemax',type=int,help='Wavelength(A) in the empty space after the spectra (for cut-off).')
     
     args=parser.parse_args()
     
@@ -31,30 +40,16 @@ def main():
         xdata.append(np.arange(0,len(ydata[i]))*heads[i]['CDELT1']+heads[i]['CRVAL1'])
     xdata=np.array(xdata)
     
-    ydnew=[]
-    xdnew=[]
-    for i,spec in enumerate(xdata):
-        ytemp=[]
-        xtemp=[]
-        for j,thing in enumerate(spec):
-            if thing > args.wavemin and thing < args.wavemax:
-                xtemp.append(thing)
-                ytemp.append(ydata[i][j])
-        ydnew.append(ytemp)
-        xdnew.append(xtemp)
+    min_wave = np.min([np.min(x) for x in xdata])
+    max_wave = np.max([np.max(x) for x in xdata])
+
+    xnew, ynew = [rescale(xdata[i],ydata[i],min_wave,max_wave) for i in range(0,len(xdata))]
     
-    ydnew=np.array(ydnew)
-    xdnew=np.array(xdnew)
+    #Write the obj spectra files here...
     
-    print len(xdnew)
+    yskyspecs=np.array([y for y in ynew if y<args.objmin or y>args.objmax])
+    ysky=np.nanmean(yskyspecs,axis=0)
     
-    print len(ydnew)
-    
-    for spec in xdnew:
-        print len(spec)
-    
-    for spec in ydnew:
-        print len(spec)
 
 if __name__ == '__main__':
     main()

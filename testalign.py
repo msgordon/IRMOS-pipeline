@@ -23,7 +23,7 @@ def rescale(spectrum,minwave,maxwave):
     # newx same length as originally spectrum, but rescaled
     newx = np.linspace(minwave,maxwave,num = len(spectrum[0]))
 
-    fy = interp1d(spectrum[0],spectrum[1], kind='linear',bounds_error=False)
+    fy = interp1d(spectrum[0],spectrum[1], kind='slinear',bounds_error=False)
 
     #apply interp function to newx
 
@@ -63,6 +63,11 @@ def main():
     #plt.vlines([min_wave, max_wave], 0, len(spectra), linewidth=5)
     
     newspectra = [rescale(spec,min_wave,max_wave) for spec in spectra]
+    
+    #Plot rescaled data all together on the same figure with the same offset for comparison.
+    for idx, spectrum in enumerate(newspectra):
+        waves, data = spectrum
+        plt.plot(waves,data+idx)
 
     # newspectra should all be same length, same waves
     skyspec = combine_sky(newspectra)
