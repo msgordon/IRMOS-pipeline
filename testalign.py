@@ -19,11 +19,14 @@ def get_spectrum(filename):
 
     return (waves, data)
 
-def rescale(spectrum,minwave,maxwave):
+def rescale(spectrum,i,minwave,maxwave):
     # newx same length as originally spectrum, but rescaled
     newx = np.linspace(minwave,maxwave,num = len(spectrum[0]))
-
-    fy = interp1d(spectrum[0],spectrum[1], kind='slinear',bounds_error=False)
+    
+    if i==9 or i==10:
+        fy = interp1d(spectrum[0],spectrum[1], kind='cubic',bounds_error=False)
+    else:
+        fy = interp1d(spectrum[0],spectrum[1], kind='slinear',bounds_error=False)
 
     #apply interp function to newx
 
@@ -62,7 +65,7 @@ def main():
     # plot bounds
     #plt.vlines([min_wave, max_wave], 0, len(spectra), linewidth=5)
     
-    newspectra = [rescale(spec,min_wave,max_wave) for spec in spectra]
+    newspectra = [rescale(spec,i,min_wave,max_wave) for i,spec in enumerate(spectra)]
     
     #Plot rescaled data all together on the same figure with the same offset for comparison.
     for idx, spectrum in enumerate(newspectra):
