@@ -16,7 +16,7 @@ def Header(header,sub_tf,xwav,name):
     head['CRPIX1']=1
     head['CRVAL1']=p(1)
     head['SKYSUB']=sub_tf
-    head['SKYREF']=name+'_sky.fits'
+    head['SKYREF']=name+'_specsky.fits'
     return head
 
 def rescale(x,y,minwave,maxwave):
@@ -57,8 +57,15 @@ def main():
     
     min_wave = np.min([np.min(x) for x in xdata])
     max_wave = np.max([np.max(x) for x in xdata])
-
-    xnew, ynew = [rescale(xdata[i],ydata[i],min_wave,max_wave) for i in range(0,len(xdata))]
+    
+    newspecs = [rescale(xdata[i],ydata[i],min_wave,max_wave) for i,spec in enumerate(xdata)]
+    xnew=[]
+    ynew=[]
+    for spec in newspecs:
+        xnew.append(spec[0])
+        ynew.append(spec[1])
+    xnew=np.array(xnew)
+    ynew=np.array(ynew)
     
     #Note: need to update the following steps (including objmin and objmax) for case in which specmin is not zero
     
@@ -67,7 +74,7 @@ def main():
     
     yskyspecs=np.array([y for i,y in enumerate(ynew) if i<args.objmin or i>args.objmax])
     ysky=np.nanmean(yskyspecs,axis=0)
-    pyfits.writeto(args.specimgs.replace('spec','sky.fits'), ysky, Header(heads[0],False,xnew[0],args.name))
+    pyfits.writeto('%s%s' % (args.specimgs,'sky.fits'), ysky, Header(heads[0],False,xnew[0],args.name))
     
     for obj in range(args.objmin,args.objmax+1):
         skysub=ynew[obj]-ysky
