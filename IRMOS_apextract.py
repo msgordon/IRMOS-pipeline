@@ -22,6 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description='Extracts apertures into 1D spectral cuts.')
     parser.add_argument('ffimg',type=str,help='Flatfielded image file.')
     parser.add_argument('reg',type=str,help='Region file defining apertures.')
+    parser.add_argument('name',type=str,help='Name of data set (e.g. NGC253).')
     
     args=parser.parse_args()
     
@@ -29,7 +30,7 @@ def main():
     
     aps1D=[]
     for i in apertures:
-        aps1D.append(np.median(i,axis=0))
+        aps1D.append(np.sum(i,axis=0))
     
     header=pyfits.getheader(args.ffimg)
     new_head=head_append(header)
@@ -39,8 +40,8 @@ def main():
     for j in aps1D_flipped:
         aps1D_final.append(j[::-1]) #flips x-axis horizontally
     
-    print 'Writing spectral cuts to NGC253.ms.fits'
-    pyfits.writeto('NGC253.ms.fits', aps1D_final, new_head)
+    print 'Writing spectral cuts to .ms.fits file.'
+    pyfits.writeto('%s.ms.fits' % (args.name), aps1D_final, new_head)
 
 
 if __name__ == '__main__':

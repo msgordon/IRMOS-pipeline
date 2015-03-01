@@ -70,15 +70,15 @@ def main():
     #Note: need to update the following steps (including objmin and objmax) for case in which specmin is not zero
     
     for obj in range(args.objmin,args.objmax+1):
-        pyfits.writeto('%s%i_r.fits' % (args.specimgs, obj), ynew[obj], Header(heads[obj],False,xnew[obj],args.name))
+        pyfits.writeto('%s%i_r.fits' % (args.specimgs, obj), ynew[obj], Header(heads[obj],False,xnew[obj],args.name), clobber=True)
     
     yskyspecs=np.array([y for i,y in enumerate(ynew) if i<args.objmin or i>args.objmax])
     ysky=np.nanmean(yskyspecs,axis=0)
-    pyfits.writeto('%s%s' % (args.specimgs,'sky.fits'), ysky, Header(heads[0],False,xnew[0],args.name))
+    pyfits.writeto('%s%s' % (args.specimgs,'sky.fits'), ysky, Header(heads[0],False,xnew[0],args.name), clobber=True)
     
     for obj in range(args.objmin,args.objmax+1):
         skysub=ynew[obj]-ysky
-        pyfits.writeto('%s%i_skysub.fits' % (args.specimgs, obj), skysub, Header(heads[obj],True,xnew[obj],args.name))
+        pyfits.writeto('%s%i_skysub.fits' % (args.specimgs, obj), skysub, Header(heads[obj],True,xnew[obj],args.name), clobber=True)
     
 
 if __name__ == '__main__':
