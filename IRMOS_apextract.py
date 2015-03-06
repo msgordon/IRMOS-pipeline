@@ -41,7 +41,7 @@ def main():
         aps1D_final.append(j[::-1]) #flips x-axis horizontally
     
     print 'Writing spectral cuts to .ms.fits file.'
-    pyfits.writeto('%s.ms.fits' % (args.name), aps1D_final, new_head)
+    pyfits.writeto('%s.ms.fits' % (args.name), aps1D_final, new_head, clobber=True)
 
 
 if __name__ == '__main__':
