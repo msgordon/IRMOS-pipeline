@@ -30,7 +30,7 @@ def main():
     
     aps1D=[]
     for i in apertures:
-        aps1D.append(np.sum(i,axis=0))
+        aps1D.append(np.mean(i,axis=0))
     
     header=pyfits.getheader(args.ffimg)
     new_head=head_append(header)
