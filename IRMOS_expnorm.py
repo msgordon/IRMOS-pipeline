@@ -8,7 +8,7 @@ def is_normalized(header, normkey):
     '''
     Return true if keyword 'normkey' is true in header
     '''
-    if header[normkey]:
+    if normkey in header and header[normkey]:
         return True
     else:
         return False
