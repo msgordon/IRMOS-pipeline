@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import os
 import argparse
 import pyfits
 import ConfigParser
@@ -24,7 +25,10 @@ def main():
     config=ConfigParser.ConfigParser()
     config.read(args.cal)
     
-    print "Writing spectra files to new folder."
+    print "Writing spectra files to folder."
+    
+    if not os.path.exists('%s_spectra' % args.name):
+        os.makedirs('%s_spectra' % args.name)
     
     for idx,row in enumerate(data):
         pyfits.writeto('%s_spectra/%s_spec%i.fits' % (args.name, args.name, idx), row, Header(config,header,'%s.ms_%i' % (args.name, idx),idx), clobber=True)
