@@ -31,7 +31,7 @@ def main():
         os.makedirs('%s_spectra' % args.name)
     
     for idx,row in enumerate(data):
-        pyfits.writeto('%s_spectra/%s_spec%i.fits' % (args.name, args.name, idx), row, Header(config,header,'%s.ms_%i' % (args.name, idx),idx), clobber=True)
+        pyfits.writeto('%s_spectra/%s_spec%i.fits' % (args.name, args.name, len(data)-1-idx), row, Header(config,header,'%s.ms_%i' % (args.name, idx),len(data)-1-idx), clobber=True)
 
 if __name__ == '__main__':
     main()
