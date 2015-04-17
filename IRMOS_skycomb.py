@@ -35,9 +35,8 @@ def main():
     parser.add_argument('specimgs',type=str,help='File location and handle for the spectra (e.g. NGC253_spec).')
     parser.add_argument('name',type=str,help='Name of data set (e.g. NGC253).')
     parser.add_argument('specmin',type=int,help='Number of first aperture (usually 0).')
-    parser.add_argument('objmin',type=int,help='Number of first object aperture.')
-    parser.add_argument('objmax',type=int,help='Number of last object aperture.')
     parser.add_argument('specmax',type=int,help='Number of last aperture.')
+    parser.add_argument('-obj',nargs='+',type=int,help='Object aperture numbers.')
     
     args=parser.parse_args()
     
@@ -67,18 +66,18 @@ def main():
     xnew=np.array(xnew)
     ynew=np.array(ynew)
     
-    #Note: need to update the following steps (including objmin and objmax) for case in which specmin is not zero
+    #Following steps are updated to accommodate for cases in which specmin is non-zero.
     
-    for obj in range(args.objmin,args.objmax+1):
-        pyfits.writeto('%s%i_r.fits' % (args.specimgs, obj), ynew[obj], Header(heads[obj],False,xnew[obj],args.name), clobber=True)
+    for obj in args.obj:
+        pyfits.writeto('%s%i_r.fits' % (args.specimgs, obj), ynew[obj-args.specmin], Header(heads[obj-args.specmin], False, xnew[obj-args.specmin], args.name), clobber=True)
     
-    yskyspecs=np.array([y for i,y in enumerate(ynew) if i<args.objmin or i>args.objmax])
+    yskyspecs=np.array([y for i,y in enumerate(ynew) if i+args.specmin not in args.obj])
     ysky=np.nanmean(yskyspecs,axis=0)
     pyfits.writeto('%s%s' % (args.specimgs,'sky.fits'), ysky, Header(heads[0],False,xnew[0],args.name), clobber=True)
     
-    for obj in range(args.objmin,args.objmax+1):
-        skysub=ynew[obj]-ysky
-        pyfits.writeto('%s%i_skysub.fits' % (args.specimgs, obj), skysub, Header(heads[obj],True,xnew[obj],args.name), clobber=True)
+    for obj in args.obj:
+        skysub=ynew[obj-args.specmin]-ysky
+        pyfits.writeto('%s%i_skysub.fits' % (args.specimgs, obj), skysub, Header(heads[obj-args.specmin], True, xnew[obj-args.specmin], args.name), clobber=True)
     
 
 if __name__ == '__main__':
