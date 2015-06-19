@@ -4,10 +4,10 @@ global color=green dashlist=8 3 width=1 font="helvetica 10 normal" select=1 high
 physical
 line(-12.165244,883,1031.8348,883) # line=0 0 font="helvetica 10 normal roman" text={1}
 line(5.8678223,878,1049.8678,878) # line=0 0 font="helvetica 10 normal roman" text={1}
-line(-3.4071108,813,1040.5929,813) # line=0 0 font="helvetica 10 normal roman" text={2}
-line(6.6339557,808,1050.634,808) # line=0 0 font="helvetica 10 normal roman" text={2}
-line(3.5194667,775.90374,1047.5195,775.90374) # line=0 0 font="helvetica 10 normal roman" text={3}
-line(22.349956,770,1066.35,770) # line=0 0 font="helvetica 10 normal roman" text={3}
+line(1.5928892,827,1045.5929,827) # line=0 0 font="helvetica 10 normal roman" text={2}
+line(6.6339557,791,1050.634,791) # line=0 0 font="helvetica 10 normal roman" text={2}
+line(-1.4805333,783.90374,1042.5195,783.90374) # line=0 0 font="helvetica 10 normal roman" text={3}
+line(21.349956,758,1065.35,758) # line=0 0 font="helvetica 10 normal roman" text={3}
 line(5.3499555,733,1049.35,733) # line=0 0 font="helvetica 10 normal roman" text={4}
 line(6.349956,728,1050.35,728) # line=0 0 font="helvetica 10 normal roman" text={4}
 line(8.3499555,656,1052.35,656) # line=0 0 font="helvetica 10 normal roman" text={5}
