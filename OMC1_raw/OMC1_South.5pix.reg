@@ -1,0 +1,30 @@
+# Region file format: DS9 version 4.1
+# Filename: OMC1_SourceFF.fit
+global color=green dashlist=8 3 width=1 font="helvetica 10 normal" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+physical
+line(-12.165244,883,1031.8348,883) # line=0 0 font="helvetica 10 normal roman" text={1}
+line(5.8678223,878,1049.8678,878) # line=0 0 font="helvetica 10 normal roman" text={1}
+line(-3.4071108,813,1040.5929,813) # line=0 0 font="helvetica 10 normal roman" text={2}
+line(6.6339557,808,1050.634,808) # line=0 0 font="helvetica 10 normal roman" text={2}
+line(3.5194667,775.90374,1047.5195,775.90374) # line=0 0 font="helvetica 10 normal roman" text={3}
+line(22.349956,770,1066.35,770) # line=0 0 font="helvetica 10 normal roman" text={3}
+line(5.3499555,733,1049.35,733) # line=0 0 font="helvetica 10 normal roman" text={4}
+line(6.349956,728,1050.35,728) # line=0 0 font="helvetica 10 normal roman" text={4}
+line(8.3499555,656,1052.35,656) # line=0 0 font="helvetica 10 normal roman" text={5}
+line(9.3499555,651,1053.35,651) # line=0 0 font="helvetica 10 normal roman" text={5}
+line(2.3499555,628,1046.35,628) # line=0 0 font="helvetica 10 normal roman" text={6}
+line(10.349956,623,1054.35,623) # line=0 0 font="helvetica 10 normal roman" text={6}
+line(5.3499555,573,1049.35,573) # line=0 0 font="helvetica 10 normal roman" text={7}
+line(4.3499555,568,1048.35,568) # line=0 0 font="helvetica 10 normal roman" text={7}
+line(9.3499555,517,1053.35,517) # line=0 0 font="helvetica 10 normal roman" text={8}
+line(8.3499555,512,1052.35,512) # line=0 0 font="helvetica 10 normal roman" text={8}
+line(5.3499555,460,1049.35,460) # line=0 0 font="helvetica 10 normal roman" text={9}
+line(9.3499555,455,1053.35,455) # line=0 0 font="helvetica 10 normal roman" text={9}
+line(20.349956,445,1064.35,445) # line=0 0 font="helvetica 10 normal roman" text={10}
+line(16.349956,440,1060.35,440) # line=0 0 font="helvetica 10 normal roman" text={10}
+line(1.8939555,395,1045.894,395) # line=0 0 font="helvetica 10 normal roman" text={11}
+line(18.533955,390,1062.534,390) # line=0 0 font="helvetica 10 normal roman" text={11}
+line(5.3499555,338,1049.35,338) # line=0 0 font="helvetica 10 normal roman" text={12}
+line(17.533956,333,1061.534,333) # line=0 0 font="helvetica 10 normal roman" text={12}
+line(28.989956,296,1072.99,296) # line=0 0 font="helvetica 10 normal roman" text={13}
+line(31.989956,291,1075.99,291) # line=0 0 font="helvetica 10 normal roman" text={13}
