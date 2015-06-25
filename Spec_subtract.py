@@ -57,6 +57,21 @@ def main():
     rms=sqrt(sum(n*n for n in yvals)/float(len(yvals)))
     
     print "RMS is: %f" % rms
+    print "Mean is: %f" % np.mean(yvals)
+
+    print "mean/rms: %f" % (np.mean(yvals)/rms)
+    
+
+    """
+    print np.min(xnew[0])
+    print np.diff(xnew[0])
+
+
+    header = pyfits.getheader(args.specimgs+'%i.fits' % args.spec1)
+    header['CRVAL'] = np.min(xnew[0])
+    header['CDELT1'] = np.diff(xnew[0])[0]
+    pyfits.writeto('OMC_specskysub.test.fits',ysub,header=header)
+    #"""
     
     plt.plot(xnew[0], ysub)
     plt.show()
