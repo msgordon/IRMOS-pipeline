@@ -1,35 +1,36 @@
 # Region file format: DS9 version 4.1
-global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+# Filename: SourceSub.r.fit
+global color=green dashlist=8 3 width=1 font="helvetica 10 normal" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
 physical
-line(0,863.2662,1044,863.2662) # line=0 0 text={1}
-line(0,848.77932,1044,848.77932) # line=0 0 text={1}
-line(0,811.24846,1044,811.24846) # line=0 0 text={2}
-line(0,799.7338,1044,799.7338) # line=0 0 text={2}
-line(0,757.62423,1044,757.62423) # line=0 0 text={3}
-line(0,749.1,1044,749.1) # line=0 0 text={3}
-line(0,748,1044,748) # line=0 0 text={4}
-line(0,736.5,1044,736.5) # line=0 0 text={4}
-line(0,701.62423,1044,701.62423) # line=0 0 text={5}
-line(0,683.37577,1044,683.37577) # line=0 0 text={5}
-line(0,647.62423,1044,647.62423) # line=0 0 text={6}
-line(0,632.26929,1044,632.26929) # line=0 0 text={6}
-line(0,592.60648,1044,592.60648) # line=0 0 text={7}
-line(0,575.82253,1044,575.82253) # line=0 0 text={7}
-line(0,558.14198,1044,558.14198) # line=0 0 text={8}
-line(0,541.85802,1044,541.85802) # line=0 0 text={8}
-line(0,506.07099,1044,506.07099) # line=0 0 text={9}
-line(0.48225309,492.75154,1044.4823,492.75154) # line=0 0 text={9}
-line(0,478,1044,478) # line=0 0 text={10}
-line(0.48225309,466,1044.4823,466) # line=0 0 text={10}
-line(0,462,1044,462) # line=0 0 text={11}
-line(0,450,1044,450) # line=0 0 text={11}
-line(0,421.52778,1044,421.52778) # line=0 0 text={12}
-line(0,404.89352,1044,404.89352) # line=0 0 text={12}
-line(0,395.10648,1044,395.10648) # line=0 0 text={13}
-line(0,378.89352,1044,378.89352) # line=0 0 text={13}
-line(0,359.94907,1044,359.94907) # line=0 0 text={14}
-line(0,341,1044,341) # line=0 0 text={14}
-line(0,320.37037,1044,320.37037) # line=0 0 text={15}
-line(0,305.47222,1044,305.47222) # line=0 0 text={15}
-line(0,289.94907,1044,289.94907) # line=0 0 text={16}
-line(0,276.20833,1044,276.20833) # line=0 0 text={16}
+line(3,864.2662,1047,864.2662) # line=0 0 font="helvetica 10 normal roman" text={1}
+line(-3,846.77932,1041,846.77932) # line=0 0 font="helvetica 10 normal roman" text={1}
+line(-1,813.24846,1043,813.24846) # line=0 0 font="helvetica 10 normal roman" text={2}
+line(2,796.7338,1046,796.7338) # line=0 0 font="helvetica 10 normal roman" text={2}
+line(0,757.62423,1044,757.62423) # line=0 0 font="helvetica 10 normal roman" text={3}
+line(0,751.1,1044,751.1) # line=0 0 font="helvetica 10 normal roman" text={3}
+line(0,747,1044,747) # line=0 0 font="helvetica 10 normal roman" text={4}
+line(2,738.5,1046,738.5) # line=0 0 font="helvetica 10 normal roman" text={4}
+line(0,701.62423,1044,701.62423) # line=0 0 font="helvetica 10 normal roman" text={5}
+line(0,683.37577,1044,683.37577) # line=0 0 font="helvetica 10 normal roman" text={5}
+line(0,647.62423,1044,647.62423) # line=0 0 font="helvetica 10 normal roman" text={6}
+line(0,632.26929,1044,632.26929) # line=0 0 font="helvetica 10 normal roman" text={6}
+line(0,592.60648,1044,592.60648) # line=0 0 font="helvetica 10 normal roman" text={7}
+line(0,575.82253,1044,575.82253) # line=0 0 font="helvetica 10 normal roman" text={7}
+line(0,558.14198,1044,558.14198) # line=0 0 font="helvetica 10 normal roman" text={8}
+line(0,541.85802,1044,541.85802) # line=0 0 font="helvetica 10 normal roman" text={8}
+line(0,506.07099,1044,506.07099) # line=0 0 font="helvetica 10 normal roman" text={9}
+line(0.48225309,492.75154,1044.4823,492.75154) # line=0 0 font="helvetica 10 normal roman" text={9}
+line(0,478,1044,478) # line=0 0 font="helvetica 10 normal roman" text={10}
+line(0.48225309,466,1044.4823,466) # line=0 0 font="helvetica 10 normal roman" text={10}
+line(0,462,1044,462) # line=0 0 font="helvetica 10 normal roman" text={11}
+line(0,450,1044,450) # line=0 0 font="helvetica 10 normal roman" text={11}
+line(0,421.52778,1044,421.52778) # line=0 0 font="helvetica 10 normal roman" text={12}
+line(0,404.89352,1044,404.89352) # line=0 0 font="helvetica 10 normal roman" text={12}
+line(0,395.10648,1044,395.10648) # line=0 0 font="helvetica 10 normal roman" text={13}
+line(0,378.89352,1044,378.89352) # line=0 0 font="helvetica 10 normal roman" text={13}
+line(0,359.94907,1044,359.94907) # line=0 0 font="helvetica 10 normal roman" text={14}
+line(2,345,1046,345) # line=0 0 font="helvetica 10 normal roman" text={14}
+line(0,320.37037,1044,320.37037) # line=0 0 font="helvetica 10 normal roman" text={15}
+line(0,305.47222,1044,305.47222) # line=0 0 font="helvetica 10 normal roman" text={15}
+line(0,289.94907,1044,289.94907) # line=0 0 font="helvetica 10 normal roman" text={16}
+line(0,276.20833,1044,276.20833) # line=0 0 font="helvetica 10 normal roman" text={16}
