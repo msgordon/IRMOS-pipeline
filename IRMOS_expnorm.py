@@ -30,7 +30,7 @@ def normalize(data, header, key, normkey):
 def main():
     parser = argparse.ArgumentParser(description='Normalize image by exptime. If image already normalized, it is skipped.')
     parser.add_argument('filelist', nargs='+', help='Files to normalize')
-    parser.add_argument('-o',metavar='outdir', type=str, help='Specify optional output directory, otherwise rewrite file')
+    parser.add_argument('-o',metavar='outfile', type=str, help='Specify optional output file, otherwise rewrite file')
     parser.add_argument('-key', type=str, default='EXPTIME', help='Specify exposure time keyword (default=EXPTIME)')
     parser.add_argument('-normkey',type=str, default='NORM', help='Specify normalized keyword (default=NORM)')
     parser.add_argument('--c',action='store_true',help='If specified, force clobber on write')
@@ -49,7 +49,7 @@ def main():
         data, header = normalize(data, header, args.key, args.normkey)
 
         if args.o:
-            outname = os.path.join(args.o, filename)
+            outname = args.o
         else:
             outname = filename
 

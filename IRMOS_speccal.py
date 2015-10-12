@@ -16,7 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description='Writes a file for every aperture with the calibrated header info.')
     parser.add_argument('specimg',type=str,help='Image file for the 1D spectra cuts.')
     parser.add_argument('cal',type=str,help='File containing calibration info.')
-    parser.add_argument('name',type=str,help='Name of data set (e.g. NGC253).')
+    parser.add_argument('outdir',type=str,help='Name of data set output directory.')
     
     args=parser.parse_args()
     
@@ -27,11 +27,22 @@ def main():
     
     print "Writing spectra files to folder."
     
-    if not os.path.exists('%s_spectra' % args.name):
-        os.makedirs('%s_spectra' % args.name)
+    if not os.path.exists(args.outdir):
+        os.makedirs(args.outdir)
     
     for idx,row in enumerate(data):
-        pyfits.writeto('%s_spectra/%s_spec%i.fits' % (args.name, args.name, len(data)-1-idx), row, Header(config,header,'%s.ms_%i' % (args.name, idx),len(data)-1-idx), clobber=True)
+        section = '%s_%i' % (os.path.splitext(args.specimg)[0], idx)
+        print 'Reading section [%s]' % section
+        if not config.has_section(section):
+            print '\tSection %i not found. Skipping.' % idx
+
+        else:
+            outfile = '%s.%i.fits' % (args.specimg.split('.ms.')[0] , idx)
+            outfile = os.path.join(args.outdir,outfile)
+            hdr = Header(config,header,section,idx)
+            print 'Writing %s' % outfile            
+            pyfits.writeto(outfile, row, hdr, clobber=True)
+            
 
 if __name__ == '__main__':
     main()

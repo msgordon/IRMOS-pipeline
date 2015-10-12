@@ -6,6 +6,22 @@ import pyfits
 from scipy.interpolate import interp1d
 from math import sqrt
 
+
+def Header(header,sub_tf,xwav,name):
+    head=header
+    
+    xpix=np.arange(1,len(xwav)+1)
+    z=np.polyfit(xpix,xwav,1)
+    p=np.poly1d(z)
+    
+    head['CDELT1']=z[0]
+    head['CRPIX1']=1
+    head['CRVAL1']=p(1)
+    head['SKYSUB']=sub_tf
+    head['SKYREF']=name+'_specsky.fits'
+    return head
+
+
 def rescale(x,y,minwave,maxwave):
     # newx same length as original spectrum, but rescaled
     newx = np.linspace(minwave,maxwave,num = len(x))
@@ -23,6 +39,7 @@ def main():
     parser.add_argument('spec1',type=int,help='Number of first aperture.')
     parser.add_argument('spec2',type=int,help='Number of second aperture.')
     parser.add_argument('wrange',nargs=2,type=int,help='Wavelength range in Angstroms (Enter 2 numbers, low and high).')
+    parser.add_argument('-stats',action='store_true',default=False)
     
     args=parser.parse_args()
     
@@ -53,6 +70,12 @@ def main():
     ynew=np.array(ynew)
     
     ysub=ynew[0]-ynew[1]
+
+    if not args.stats:
+        pyfits.writeto('test_sub.fits',ysub,Header(heads[0],'',xnew[0],'test_sub.fits'),clobber=True)
+
+    else:
+        ysub=ynew[1]
     yvals=np.array([ysub[i] for i,j in enumerate(xnew[0]) if j>=args.wrange[0] and j<=args.wrange[1]])
     rms=sqrt(sum(n*n for n in yvals)/float(len(yvals)))
     

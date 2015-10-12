@@ -1,0 +1,65 @@
+#IRMOS-pipeline
+Figer59 is acquisition
+
+## Source
+python IRMOS_imarith.py Figer/Figer61.fit Figer/Figer62.fit Figer/SOURCE1.fits -method mean
+python IRMOS_imarith.py Figer/Figer64.fit Figer/Figer65.fit Figer/SOURCE2.fits -method mean
+python IRMOS_imarith.py Figer/SOURCE1.fits Figer/SOURCE2.fits Figer/SOURCE_comb.fits -method mean
+
+SOURCE is 4x60s images, 5 pixel slits
+
+## Source darks
+python IRMOS_imarith.py Figer/Figer63.fit Figer/Figer68.fit Figer/SOURCE_DARK.fits -method mean
+
+## Source normalize
+python IRMOS_expnorm.py Figer/SOURCE_comb.fits -o Figer/SOURCE_comb_norm.fits
+python IRMOS_expnorm.py Figer/SOURCE_DARK.fits -o Figer/SOURCE_DARK_norm.fits
+
+## Flats/ flats normalize
+python IRMOS_expnorm.py Figer/Figer77.fit -o Figer/FLAT_DARK_norm.fits
+python IRMOS_expnorm.py Figer/Figer78.fit -o Figer/FLAT_norm.fits
+
+## Subtract darks
+python IRMOS_imarith.py Figer/FLAT_norm.fits Figer/FLAT_DARK_norm.fits Figer/FLAT_sub.fits -method sub
+python IRMOS_imarith.py Figer/SOURCE_comb_norm.fits Figer/SOURCE_DARK_norm.fits Figer/SOURCE_sub.fits -method sub
+
+## clean
+python IRMOS_clean.py Figer/*_sub.fits
+
+## derotate
+python IRMOS_derotate.py Figer/*_sub.fits -angle 1.15 --c
+
+## make flat field
+python IRMOS_flatfield.py Figer/FLAT_sub.r.fits Figer.reg Figer/FLATFIELD.fits
+
+## divide source by flat field
+python IRMOS_imarith.py Figer/SOURCE_sub.r.fits Figer/FLATFIELD.fits Figer/SOURCE_sub.r.ff.fits -method div
+
+#### FINAL SOURCE IMAGE:
+Figer/SOURCE_sub.r.ff.fits
+
+## extract apertures
+python IRMOS_apextract.py Figer/SOURCE_sub.r.ff.fits Figer.reg Figer
+
+## identify
+python IRMOS_identify.py Figer.ms.fits ohlines.dat
+
+## extract and write individual files
+python IRMOS_speccal.py Figer.ms.fits database/Figer.ms.cal Figer_spectra
+
+## make sky
+python IRMOS_skycomb.py Figer_spectra/Figer.0.fits Figer_spectra/Figer.7.fits Figer_spectra/Figer.sky.fits
+
+## subtract sky
+python IRMOS_sarith.py Figer_spectra/Figer.10.fits - Figer_spectra/Figer.sky.fits Figer_spectra/Figer.10.ss.fits
+python IRMOS_sarith.py Figer_spectra/Figer.9.fits - Figer_spectra/Figer.sky.fits Figer_spectra/Figer.9.ss.fits
+
+
+python stats.py Figer_spectra/Figer.9.ss.fits 21366 22758
+
+10 is J18380330-0652451, K = 5.864
+9  is J18380129-0652519, K = 7.558
+
+
+
+## Source2

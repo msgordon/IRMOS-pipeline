@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-#mod date: 2015-02-226
+#mod date: 2015-02-26
 import argparse
 import pyfits
 import numpy as np
@@ -18,7 +18,7 @@ def plot_spectrum(spectrum, wave, header, color='k',title=None,xlim=None,ylim=No
     plt.ylim(ylim)
   #else:
   #  plt.ylim(min(spectrum), max(spectrum))
-    
+
   plt.xlabel('$\lambda$ ($\AA$)', fontsize=30)
   plt.tick_params(axis='x', which='both', labelsize=22)
   plt.tick_params(axis='y', which='both', left='off',right='off', labelleft='off')

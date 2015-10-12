@@ -110,7 +110,7 @@ class Aperture(object):
         try:
             os.mkdir(self.databasedir)
         except OSError:
-            print 'Directory %s exists.' % self.databasedir
+            pass #print 'Directory %s exists.' % self.databasedir
 
         section = self.section
 
@@ -174,6 +174,7 @@ class Aperture(object):
             newlines = [[peak[0],peak[1],ref[2],None] for peak,ref in zip(peaks,reflines)]
             self.lines = newlines
         except:
+            print 'No matching features in aperture %i' % self.aperture
             return None  #failed to find new peaks
 
         return self.lines
@@ -669,4 +670,4 @@ class Plotter(object):
             fitted = ap.fit()
             if ap.fitted and display:
                 self.display(ap.x,ap.active_data,reset=True)
-        return fitted
+        return

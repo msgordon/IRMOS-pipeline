@@ -34,13 +34,17 @@ def main():
     
     header=pyfits.getheader(args.ffimg)
     new_head=head_append(header)
-    
+
+    ### not sure about this
+    '''
     aps1D_flipped=aps1D[::-1] #reverses the aperture order back to normal
     aps1D_final=[]
     for j in aps1D_flipped:
         aps1D_final.append(j[::-1]) #flips x-axis horizontally
+    '''
+    aps1D_final = aps1D
     
-    print 'Writing spectral cuts to .ms.fits file.'
+    print 'Writing spectral cuts to %s.ms.fits file.' % args.name
     pyfits.writeto('%s.ms.fits' % (args.name), aps1D_final, new_head, clobber=True)
 
 

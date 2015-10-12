@@ -19,12 +19,14 @@ xdata=np.arange(xmin,xmax,head['CDELT1'])
 
 yvals=np.array([ydata[i] for i,j in enumerate(xdata) if j>=args.peak[0] and j<=args.peak[1]])
 signal=np.trapz(yvals,dx=head['CDELT1'])
+print 'S',signal
 
 lowvals=np.array([ydata[i] for i,j in enumerate(xdata) if j>=args.bglow[0] and j<=args.bglow[1]])
 lowrms=sqrt(sum(n*n for n in lowvals)/float(len(lowvals)))
 highvals=np.array([ydata[i] for i,j in enumerate(xdata) if j>=args.bghigh[0] and j<=args.bghigh[1]])
 highrms=sqrt(sum(n*n for n in highvals)/float(len(highvals)))
 noise=(lowrms+highrms)/2.0
+print 'N',noise
 
 SN=signal/noise
 

@@ -34,7 +34,10 @@ class DataCube:
     @staticmethod
     # Pull filenum from filename
     def get_filenum(filename,path,source_name,ext):
-        return int(filename[len(''.join([path,source_name])):-len(ext)])
+        filestr = filename.split('_')
+        filestr = filestr[-1].strip(ext)
+        return int(filestr)
+        #return int(filename[len(''.join([path,source_name])):-len(ext)])
 
     @staticmethod
     # Grab only the files between a range
@@ -48,6 +51,7 @@ class DataCube:
             try:
                 filenum = DataCube.get_filenum(f,path,source_name,ext)
             except:
+                print 'Error in %s' % f
                 continue
             if (filenum <= last_frame) and (filenum >= first_frame):
                 filelist.append(f)
