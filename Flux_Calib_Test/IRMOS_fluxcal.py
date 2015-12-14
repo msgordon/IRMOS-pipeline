@@ -3,8 +3,8 @@ import argparse
 import pyfits
 import numpy as np
 import matplotlib.pyplot as plt
+import flux_utils
 from scipy.interpolate import interp1d
-from scipy.ndimage.filters import gaussian_filter1d
 
 def rescale(x,y,minwave,maxwave,length):
     newx = np.linspace(minwave,maxwave,num = length)
@@ -47,11 +47,34 @@ def magnitude_flux(waves,mag,zeropt=48.60):
     #return flux in units (erg cm-2 s-1 A-1):
     return flux * (c / waves**2.0)
 
-def smooth(spectrum, sigma):
-    """Smooths the input spectrum using a user-specified Gaussian kernel.
-    """
-    spectrum = gaussian_filter1d(spectrum, sigma)
-    return spectrum
+def smoothing(waves, counts, k, lw):
+    #Smooths the input spectrum using a user-specified kernel and line-width.
+    # gently smooth first because reasons?
+    smoothed = flux_utils.smooth(counts, kernel=k)
+    
+    # find local minima
+    xl,yl = flux_utils.find_lines(smoothed, x_axis=waves, lookahead=lw)
+    
+    # fit gaussians to each found feature
+    #  basically, we just want the width of the line to excise it
+    #  from the spectrum
+    gaussians = flux_utils.fit_gaussians(xl, yl, waves, smoothed, lw, ax=None)
+    
+    # excise gaussians from spectrum
+    mask = flux_utils.mask_gaussians(gaussians, waves)
+    
+    # mask out gaussians
+    waveM = np.ma.array(waves, mask=mask, fill_value=np.nan)
+    specM = np.ma.array(smoothed, mask=mask, fill_value=np.nan)
+    
+    # spline fit to smooth
+    # re-interpolate back to original wave
+    specS,_ = flux_utils.spline_fit(specM[~specM.mask], waveM[~waveM.mask], waves)
+    
+    # finally, smooth again cuz why not?
+    specF = flux_utils.smooth(specS, kernel=k)
+    
+    return specF
 
 def main():
     parser = argparse.ArgumentParser(description='Uses standard star data to flux-calibrate input spectra.')
@@ -61,6 +84,8 @@ def main():
     parser.add_argument('sdat',type=str,help='Standard star data file.')
     parser.add_argument('-key', type=str, default='EXPTIME', help='Specify exposure time keyword (default=EXPTIME)')
     parser.add_argument('-normkey',type=str, default='NORM', help='Specify normalized keyword (default=NORM)')
+    parser.add_argument('-k',metavar='kernel',type=float,default=10,help='Specify kernel for initial Gaussian smoothing (default=10)')
+    parser.add_argument('-lw',metavar='linewidth',type=float,default=50,help='Specify approximate linewidth of the larger absorption features in Angstroms (default=50)')
     
     args=parser.parse_args()
     
@@ -100,24 +125,22 @@ def main():
         std_waves = np.delete(std_waves, zindex)
     
     #Smooth std spectrum to effectively simulate background continuum
-    '''sigma = 400
-    
-    std_counts_smoothed = smooth(std_counts, sigma)'''
+    std_counts_smoothed = smoothing(std_waves, std_counts, args.k, args.lw)
     
     #Rescale calibration spectrum to be same length and scale as standard star spectrum
     sdat_waves, sdat_flux = rescale(sdat_waves, sdat_flux, np.min(std_waves), np.max(std_waves), len(std_waves))
     
     #Create sensitivity function
-    ratio = np.abs(np.array(sdat_flux,dtype='float')/np.array(std_counts,dtype='float')) #From Davenport
-    
-    
+    ratio = np.abs(np.array(sdat_flux,dtype='float')/np.array(std_counts_smoothed,dtype='float')) #From Davenport
+    new_waves, new_ratio = rescale(std_waves, ratio, np.min(spec_waves), np.max(spec_waves), len(spec_waves))
+    spec_flux = spec_counts*new_ratio
     
     #Update spectrum header
     spec_hdr['FCAL'] = (True, 'Data is flux-calibrated')
+    spec_hdr['BUNIT'] = 'erg/s/cm**2/Angstrom' #Not sure about this; the IAU Style Manual doesn't like it, but others seem to use it regardless.
     
     #Write flux-calibrated sprectrum to .fits file
-    pyfits.writeto(ars.out, spec_flux, spec_hdr, clobber=True)
-    
+    pyfits.writeto(args.out, spec_flux, spec_hdr, clobber=True)
 
 if __name__ == '__main__':
     main()
