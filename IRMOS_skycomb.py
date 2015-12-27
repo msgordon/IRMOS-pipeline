@@ -71,7 +71,7 @@ def main():
     print 'w0: %.2f, w1: %.2f, dw: %.2f' % (min_wave,max_wave,header['CDELT1'])
 
     print 'Writing to %s' % args.outsky
-    #pyfits.writeto(args.outsky,ysky,header,clobber=args.c)
+    pyfits.writeto(args.outsky,ysky,header,clobber=args.c)
     
     
 
