@@ -7,7 +7,10 @@ import pyfits
 from peakdetect import peakdetect
 from scipy.signal import correlate
 import os
+from collections import OrderedDict
 import ConfigParser
+from scipy.ndimage.filters import gaussian_filter1d
+import textwrap
 
 
 def readlinelist(filename):
@@ -183,11 +186,13 @@ class Aperture(object):
     
 
 class Plotter(object):
-    def __init__(self, filename, aperture, linelist=None,load=False):
+    def __init__(self, filename, aperture, linelist=None,load=False,kernel=0):
         self.filename = filename
         self.linelist = linelist
         
         self.data = pyfits.getdata(filename)
+
+        self.kernel = kernel
 
         # hold all apertures
         self.aps = [None]*len(self.data)
@@ -216,6 +221,7 @@ class Plotter(object):
     def show(self):
         self._setup_linelist(self.linelist)
         self._setup_subparser()
+        self.subparser.print_help()   # Display help on launch
         self._setup_labeler()
         fig = self._initialize_figure()
         # wait for close
@@ -232,14 +238,24 @@ class Plotter(object):
 
     def _setup_subparser(self):
         # set up subparser
-        self.subparser=argparse.ArgumentParser(description='Parse window text.',prog='')
+        keyHelp = [('m','Mark line at mouse position'),('d','Delete line at mouse position'),('f','Fit calibration to marked lines'),('c','Calibrate from reference aperture'),('Shift-(','Prev aperture'),('Shift-)','Next aperture'),('z','Reduce kernel smoothing'),('x','Increase kernel smoothing')]
+        keyHelp = OrderedDict(keyHelp)
+
+        descr = 'Parse window text.\n'
+        descr = descr + '\n'.join([k+'\t'+v for k,v in keyHelp.iteritems()])
+        
+        self.subparser=argparse.ArgumentParser(description=descr,prog='',formatter_class=argparse.RawTextHelpFormatter)
         self.subparser.add_argument('--r',action='store_true',help='Restore original')
         self.subparser.add_argument('--q',action='store_true',help='Close Plotter and quit')
         self.subparser.add_argument('-w',choices=['a','f'],help="Window functions. 'a' restores axes. 'f' flips x-axis")
         self.subparser.add_argument('--s',nargs='?',default=None,const=-1,help='Save to database.  "--s a" saves all')
         self.subparser.add_argument('--l',action='store_true',help='Load from database')
         self.subparser.add_argument('--setref',nargs='?',type=int,default=None,const=-1,help='Set this aperture (or specified index) as reference.')
-        self.subparser.add_argument('--c',nargs='?',default=None,const=-1,help='Calibrate this aperture against reference.  "--c a" calibrates all')
+        self.subparser.add_argument('--c',nargs='?',default=None,const=-1,help=textwrap.dedent('''\
+        Calibrate this aperture against reference.
+        "--c a" calibrates all
+        "--c f" forces calibration without fitting
+        '''))
         
         return
 
@@ -279,6 +295,12 @@ class Plotter(object):
                 self.aps[i] = Aperture(self.filename,self.data,i,self.linelist)
         return self.aps
 
+    def smooth(self,data):
+        if self.kernel <= 0:
+            self.kernel = 0
+            return data
+        else:
+            return gaussian_filter1d(data,sigma=self.kernel)
 
     def displaylines(self,lines=None,color='r'):
         arrh = plt.gca().get_ylim()[1]*0.05
@@ -305,6 +327,8 @@ class Plotter(object):
             ylim = plt.gca().get_ylim()
 
         self.fig.clf()
+
+        data = self.smooth(data)
         
         plt.plot(x,data,lw=1.5,color='k')
 
@@ -316,6 +340,13 @@ class Plotter(object):
             plt.xlim(plt.gca().get_xlim()[::-1])
 
         self.displaylines(lines)
+
+        # if outermost x is 0, then units are pixels
+        if (x[0] == 0) or (x[-1] == 0):
+            plt.xlabel('Pixel')
+        else:
+            plt.xlabel(r'Wavelength $\AA$')
+        
         self.fig.suptitle('%s[%i]' % (self.ap.filename,self.ap.aperture))
         self.fig.canvas.draw()
 
@@ -399,6 +430,10 @@ class Plotter(object):
             self._load_all_apertures()
             for ap in self.aps:
                 self.calibrate(ap,display=False)
+
+        if args.c == 'f':
+            # calibrate wthout fit
+            self.calibrate(self.ap,force=True)
 
         # load features from ./database/
         if args.l:
@@ -601,6 +636,23 @@ class Plotter(object):
             
             return
 
+        # Smooth
+        if event.key == 'z':
+            if self.kernel == 0:
+                return
+            self.kernel -= 0.5
+
+            self.display(self.ap.x,self.ap.active_data,reset=False)
+            return
+
+        if event.key == 'x':
+            self.kernel += 0.5
+
+            self.display(self.ap.x,self.ap.active_data,reset=False)
+            return
+
+            
+
         # if left, get next
         if event.key in ['9','(']:
             cap = self.ap.aperture
@@ -655,13 +707,15 @@ class Plotter(object):
         #self.cy = self.active_data[indx]
         return
 
-    def calibrate(self,ap,display=True):
+    def calibrate(self,ap,display=True,force=False):
         if self.iref is None:
             print 'No reference aperture set'
             return None
         if ap is None:
             return
         shift = find_shift(self.aps[self.iref].active_data,ap.active_data)
+        if force:
+            shift = 0
         print 'Offset %i pixels from reference' % shift
         lines = ap.reidentify(self.aps[self.iref].lines,shift)
 
