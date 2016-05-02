@@ -238,7 +238,7 @@ class Plotter(object):
 
     def _setup_subparser(self):
         # set up subparser
-        keyHelp = [('m','Mark line at mouse position'),('d','Delete line at mouse position'),('f','Fit calibration to marked lines'),('c','Calibrate from reference aperture'),('Shift-(','Prev aperture'),('Shift-)','Next aperture'),('z','Reduce kernel smoothing'),('x','Increase kernel smoothing')]
+        keyHelp = [('m','Mark line at mouse position (local maximum)'),('l','Mark line at mouse position (no max fitting)'),('d','Delete line at mouse position'),('f','Fit calibration to marked lines'),('c','Calibrate from reference aperture'),('Shift-(','Prev aperture'),('Shift-)','Next aperture'),('z','Reduce kernel smoothing'),('x','Increase kernel smoothing')]
         keyHelp = OrderedDict(keyHelp)
 
         descr = 'Parse window text.\n'
@@ -602,6 +602,22 @@ class Plotter(object):
             self.keycid = self.fig.canvas.mpl_connect('key_press_event',self.pausekey)
             self.cm = localmax[0]
             self.temppids = self.displaylines([[self.cm,localmax[1],'',None]],'b')
+            self.fig.canvas.draw()
+            return
+
+        #force this mouse position
+        if event.key == 'l':
+            cm = self.ci
+            if cm is None:
+                return
+            self.fig.canvas.mpl_disconnect(self.keycid)
+            self.pausetext = '[%i]: ' % int(cm)
+            self.labeltext = self.pausetext
+            self.labelmode = True
+            self.pid = self.displaytext(self.pausetext)
+            self.keycid = self.fig.canvas.mpl_connect('key_press_event',self.pausekey)
+            self.cm = int(cm)
+            self.temppids = self.displaylines([[self.cm,self.ap.active_data[self.cm],'',None]],'b')
             self.fig.canvas.draw()
             return
 
