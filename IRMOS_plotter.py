@@ -169,8 +169,13 @@ class Aperture(object):
         return (m,b,rms)
 
 
-    def reidentify(self,reflines,offset):
+    def reidentify(self,reflines,offset,force=False):
         guessx = [x[0]+offset for x in reflines]
+        if force:
+            newy = self.active_data[int(x[0])]
+            self.lines = [[x[0],newy,x[2],None] for x in reflines]
+            return self.lines
+
         try:
             peaks = [find_peak(self.active_data,x,self.search,len(self.x)) for x in guessx]
             # ix, y, s, pid
@@ -729,11 +734,13 @@ class Plotter(object):
             return None
         if ap is None:
             return
-        shift = find_shift(self.aps[self.iref].active_data,ap.active_data)
+
         if force:
             shift = 0
+        else:
+            shift = find_shift(self.aps[self.iref].active_data,ap.active_data)
         print 'Offset %i pixels from reference' % shift
-        lines = ap.reidentify(self.aps[self.iref].lines,shift)
+        lines = ap.reidentify(self.aps[self.iref].lines,shift,force=force)
 
         if lines:
             print 'Located %i features from reference' % len(lines)
